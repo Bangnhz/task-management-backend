@@ -1,0 +1,60 @@
+# ── Target & Build Outputs ──
+target/
+build/
+.gradle/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+out/
+
+# ── Logs & Temporary Files ──
+*.log
+logs/
+*.tmp
+
+# ── Wrapper Directories ──
+.mvn/
+mvnw
+mvnw.cmd
+
+# ── IDE & Editor Configurations ──
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse / STS
+.settings/
+.project
+.classpath
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# ── Environment & Secrets ──
+application-local.yml
+application-local.properties
+application-dev.yml
+application-dev.properties
+.env
+.env.local
+!.env.example
+
+# ── OS Files ──
+.DS_Store
+Thumbs.db
