@@ -35,10 +35,10 @@ public class ProjectController {
 
     @GetMapping("/me")
     public ResponseEntity<Page<ProjectCardResponse>> getMyProjects(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "updatedAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", defaultValue = "updatedAt") String sortBy,
+            @RequestParam(name = "direction", defaultValue = "desc") String direction
     ) {
         Long userId = SecurityUtils.getCurrentUserId();
 
