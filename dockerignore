@@ -1,0 +1,32 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE & Editor configs
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# Gradle build outputs & caches
+.gradle
+build
+out
+
+# Logs
+*.log
+logs/
+
+# Docker & Container files
+Dockerfile*
+docker-compose*
+.dockerignore
+dockerignore
+
+# Temporary files & docs
+*.md
+HELP.md
+.DS_Store
+Thumbs.db

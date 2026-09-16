@@ -1,5 +1,6 @@
 package com.example.task_management.dto.response;
 
+import com.example.task_management.enums.MemberStatus;
 import com.example.task_management.enums.WorkspaceRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,5 +21,6 @@ public class WorkspaceMemberResponse {
     private String email;
     private String avatarUrl;
     private WorkspaceRole role;
+    private MemberStatus status;
     private LocalDateTime joinedAt;
 }

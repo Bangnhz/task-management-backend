@@ -61,7 +61,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<ProjectCardResponse> getProjectSummariesByWorkspaceId(Long workspaceId) {
-        return projectRepository.getProjectSummariesByWorkspaceId(workspaceId);
+        Long userId = SecurityUtils.getCurrentUserId();
+        return projectRepository.getProjectSummariesByWorkspaceId(workspaceId, userId);
     }
 
     @Override
@@ -112,5 +113,12 @@ public class ProjectServiceImpl implements ProjectService {
         activityLogService.log(logRequest);
 
         return projectConverter.toProjectCardResponse(saved);
+    }
+
+    @Override
+    public ProjectResponse getProjectById(Long projectId) {
+        ProjectEntity project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found with id: " + projectId));
+        return projectConverter.toProjectResponse(project);
     }
 }

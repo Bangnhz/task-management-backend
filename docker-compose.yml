@@ -1,0 +1,33 @@
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: task_management_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: task_management_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./src/main/java/com/example/task_management/database/db.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: task_management_backend
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/task_management_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: secretpassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+volumes:
+  pgdata:

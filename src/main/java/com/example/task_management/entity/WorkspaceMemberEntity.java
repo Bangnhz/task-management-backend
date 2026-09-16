@@ -1,5 +1,6 @@
 package com.example.task_management.entity;
 
+import com.example.task_management.enums.MemberStatus;
 import com.example.task_management.enums.WorkspaceRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,4 +42,9 @@ public class WorkspaceMemberEntity {
     @CreationTimestamp
     @Column(name = "joined_at", nullable = false, updatable = false)
     private LocalDateTime joinedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    @Builder.Default
+    private MemberStatus status = MemberStatus.ACTIVE;
 }

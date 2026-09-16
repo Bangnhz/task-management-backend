@@ -11,7 +11,7 @@ public interface StatisticsRepository {
         SELECT new com.example.task_management.dto.response.TaskStatisticsResponse(
             COUNT(t.id),
             SUM(CASE 
-                WHEN tl.title = 'In Progress' 
+                WHEN tl.isDone is false
                 THEN 1L ELSE 0L 
             END),
             SUM(CASE 
@@ -20,7 +20,7 @@ public interface StatisticsRepository {
                 THEN 1L ELSE 0L 
             END),
             SUM(CASE 
-                WHEN tl.title = 'Done'
+                WHEN tl.isDone is true
                 THEN 1L ELSE 0L 
             END)
         )
@@ -29,4 +29,4 @@ public interface StatisticsRepository {
         WHERE t.assignee.id = :userId
     """)
     TaskStatisticsResponse getTaskStatistic(@Param("userId") Long userId);
-}
+}

@@ -21,11 +21,11 @@ DROP TABLE IF EXISTS
 -- 2. TẠO KIỂU ENUM
 -- ==============================================================================
 DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'project_visibility') THEN
-CREATE TYPE project_visibility AS ENUM ('PRIVATE', 'WORKSPACE', 'PUBLIC');
-END IF;
-END $$;
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'project_visibility') THEN
+            CREATE TYPE project_visibility AS ENUM ('PRIVATE', 'WORKSPACE', 'PUBLIC');
+        END IF;
+    END $$;
 
 -- ==============================================================================
 -- 3. TẠO BẢNG (SCHEMA DEFINITION)
@@ -58,6 +58,7 @@ CREATE TABLE workspace_members (
                                    user_id BIGINT NOT NULL,
                                    role VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
                                    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                   status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
 
                                    CONSTRAINT fk_workspace_member_workspace
                                        FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
@@ -271,8 +272,8 @@ INSERT INTO users (id, email, password_hash, full_name, avatar_url, created_at) 
                                                                                     (3, 'hoa.le@company.com', '$2a$10$e8R6.y3D.O2X2zM8G9aY0eT.G8x1h5m0Q2X2zM8G9aY0eT.G8x1h5', 'Lê Thị Hoa', 'https://i.pravatar.cc/150?u=hoale', '2026-01-12 10:30:00'),
                                                                                     (4, 'minh.pham@company.com', '$2a$10$e8R6.y3D.O2X2zM8G9aY0eT.G8x1h5m0Q2X2zM8G9aY0eT.G8x1h5', 'Phạm Đức Minh', 'https://i.pravatar.cc/150?u=minhpham', '2026-01-15 14:20:00'),
                                                                                     (5, 'anh.vu@company.com', '$2a$10$e8R6.y3D.O2X2zM8G9aY0eT.G8x1h5m0Q2X2zM8G9aY0eT.G8x1h5', 'Vũ Quỳnh Anh', 'https://i.pravatar.cc/150?u=anhvu', '2026-01-20 11:00:00'),
-                                                                                    (6, 'b@1', '$2a$10$VNpb.EqDI5jhM3ZBOPI09uj6ZB8xK7MtIYHzk19oKTiTZpPjISoSW', 'Nguyễn Văn B', 'https://i.pravatar.cc/150?u=user6', '2026-01-21 08:00:00');
-(7, 'c@1', '$2a$10$VNpb.EqDI5jhM3ZBOPI09uj6ZB8xK7MtIYHzk19oKTiTZpPjISoSW', 'Nguyễn Văn C', 'https://i.pravatar.cc/150?u=user7', '2026-01-22 08:00:00');
+                                                                                    (6, 'b@1', '$2a$10$VNpb.EqDI5jhM3ZBOPI09uj6ZB8xK7MtIYHzk19oKTiTZpPjISoSW', 'Nguyễn Văn B', 'https://i.pravatar.cc/150?u=user6', '2026-01-21 08:00:00'),
+                                                                                    (7, 'c@1', '$2a$10$VNpb.EqDI5jhM3ZBOPI09uj6ZB8xK7MtIYHzk19oKTiTZpPjISoSW', 'Nguyễn Văn C', 'https://i.pravatar.cc/150?u=user7', '2026-01-22 08:00:00');
 SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
 
 -- 5.2. Workspaces

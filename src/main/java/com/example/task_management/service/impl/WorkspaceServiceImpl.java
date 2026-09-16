@@ -72,7 +72,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         WorkspaceMemberEntity member = WorkspaceMemberEntity.builder()
                 .workspace(savedWorkspace)
                 .user(user)
-                .role(WorkspaceRole.ADMIN)
+                .role(WorkspaceRole.OWNER)
                 .build();
 
         workspaceMemberRepository.save(member);

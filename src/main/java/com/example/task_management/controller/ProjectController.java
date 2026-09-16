@@ -2,6 +2,7 @@ package com.example.task_management.controller;
 
 import com.example.task_management.dto.request.TaskListCreateRequest;
 import com.example.task_management.dto.response.ProjectCardResponse;
+import com.example.task_management.dto.response.ProjectResponse;
 import com.example.task_management.dto.response.TaskCardResponse;
 import com.example.task_management.dto.response.TaskListResponse;
 import com.example.task_management.security.SecurityUtils;
@@ -59,7 +60,15 @@ public class ProjectController {
 //        return ResponseEntity.ok(projects);
 //    }
 
+    @GetMapping("/{projectId}")
+    @PreAuthorize("@projectSecurity.canAccessProject(#projectId)")
+    public ResponseEntity<ProjectResponse> getProjectById(@PathVariable("projectId") Long projectId) {
+        ProjectResponse project = projectService.getProjectById(projectId);
+        return ResponseEntity.ok(project);
+    }
+
     @GetMapping("/{projectId}/tasks")
+    @PreAuthorize("@projectSecurity.canAccessProject(#projectId)")
     public ResponseEntity<List<TaskCardResponse>> getTasksByProjectId(@PathVariable("projectId") Long projectId) {
         List<TaskCardResponse> tasks = taskService.getTasksByProjectId(projectId);
         return ResponseEntity.ok(tasks);
@@ -67,7 +76,7 @@ public class ProjectController {
 
     // Project detail
     @GetMapping("/{projectId}/task-lists")
-    @PreAuthorize("@projectSecurity.isMember(#p0)")
+    @PreAuthorize("@projectSecurity.canAccessProject(#projectId)")
     public ResponseEntity<List<TaskListResponse>> getTaskListsByProjectId(@PathVariable("projectId") Long projectId) {
         System.out.println("ProjectId create" + projectId);
         List<TaskListResponse> taskLists = taskListService.getTaskListsByProjectId(projectId);

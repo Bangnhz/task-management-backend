@@ -24,15 +24,39 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
             COUNT(t.id),
             p.visibility,
             p.updatedAt
-            
         )
         FROM ProjectEntity p
         LEFT JOIN p.taskLists tl
         LEFT JOIN tl.tasks t
         WHERE p.workspace.id = :workspaceId
+        AND (
+            EXISTS (
+                SELECT 1
+                FROM ProjectMemberEntity pm
+                WHERE pm.project.id = p.id
+                AND pm.user.id = :userId
+                AND pm.status = com.example.task_management.enums.MemberStatus.ACTIVE
+            )
+            OR (
+                p.visibility = com.example.task_management.enums.ProjectVisibility.WORKSPACE
+                AND EXISTS (
+                    SELECT 1
+                    FROM WorkspaceMemberEntity wm
+                    WHERE wm.workspace.id = p.workspace.id
+                    AND wm.user.id = :userId
+                    AND wm.status = com.example.task_management.enums.MemberStatus.ACTIVE
+                    AND wm.role != com.example.task_management.enums.WorkspaceRole.GUEST
+                )
+            )
+            OR (
+                p.visibility = com.example.task_management.enums.ProjectVisibility.PUBLIC
+            )
+        )
         GROUP BY p.id, p.title
     """)
-    List<ProjectCardResponse> getProjectSummariesByWorkspaceId(@Param("workspaceId") Long workspaceId);
+    List<ProjectCardResponse> getProjectSummariesByWorkspaceId(
+            @Param("workspaceId") Long workspaceId,
+            @Param("userId") Long userId);
 
     @Query(value= """
     SELECT new com.example.task_management.dto.response.ProjectCardResponse(
@@ -45,21 +69,55 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     FROM ProjectEntity p
     LEFT JOIN p.taskLists tl
     LEFT JOIN tl.tasks t
-    WHERE EXISTS (
-        SELECT 1
-        FROM WorkspaceMemberEntity wm
-        WHERE wm.workspace.id = p.workspace.id
-        AND wm.user.id = :userId
+    WHERE (
+        EXISTS (
+            SELECT 1
+            FROM ProjectMemberEntity pm
+            WHERE pm.project.id = p.id
+            AND pm.user.id = :userId
+            AND pm.status = com.example.task_management.enums.MemberStatus.ACTIVE
+        )
+        OR (
+            p.visibility = com.example.task_management.enums.ProjectVisibility.WORKSPACE
+            AND EXISTS (
+                SELECT 1
+                FROM WorkspaceMemberEntity wm
+                WHERE wm.workspace.id = p.workspace.id
+                AND wm.user.id = :userId
+                AND wm.status = com.example.task_management.enums.MemberStatus.ACTIVE
+                AND wm.role != com.example.task_management.enums.WorkspaceRole.GUEST
+            )
+        )
+        OR (
+            p.visibility = com.example.task_management.enums.ProjectVisibility.PUBLIC
+        )
     )
     GROUP BY p.id, p.title
 """,    countQuery = """
         SELECT COUNT(DISTINCT p.id)
         FROM ProjectEntity p
-        WHERE EXISTS (
-            SELECT 1
-            FROM WorkspaceMemberEntity wm
-            WHERE wm.workspace.id = p.workspace.id
-            AND wm.user.id = :userId
+        WHERE (
+            EXISTS (
+                SELECT 1
+                FROM ProjectMemberEntity pm
+                WHERE pm.project.id = p.id
+                AND pm.user.id = :userId
+                AND pm.status = com.example.task_management.enums.MemberStatus.ACTIVE
+            )
+            OR (
+                p.visibility = com.example.task_management.enums.ProjectVisibility.WORKSPACE
+                AND EXISTS (
+                    SELECT 1
+                    FROM WorkspaceMemberEntity wm
+                    WHERE wm.workspace.id = p.workspace.id
+                    AND wm.user.id = :userId
+                    AND wm.status = com.example.task_management.enums.MemberStatus.ACTIVE
+                    AND wm.role != com.example.task_management.enums.WorkspaceRole.GUEST
+                )
+            )
+            OR (
+                p.visibility = com.example.task_management.enums.ProjectVisibility.PUBLIC
+            )
         )
     """
     )

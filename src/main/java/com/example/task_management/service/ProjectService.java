@@ -13,5 +13,6 @@ public interface ProjectService {
     List<ProjectResponse> getProjectsByWorkspaceId(Long workspaceId);
     List<ProjectCardResponse> getProjectSummariesByWorkspaceId(Long workspaceId);
     ProjectCardResponse createProject(Long workspaceId, ProjectCreateRequest projectCreateRequest);
+    ProjectResponse getProjectById(Long projectId);
 }
 

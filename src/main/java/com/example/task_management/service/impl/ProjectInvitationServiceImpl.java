@@ -137,14 +137,13 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
         ProjectMemberEntity savedMember = projectMemberRepository.save(newMember);
 
         WorkspaceEntity workspace = invitation.getProject().getWorkspace();
-        boolean isWorkspaceMember = workspaceMemberRepository.findAll().stream()
-                .anyMatch(wm -> wm.getWorkspace().getId().equals(workspace.getId()) && wm.getUser().getId().equals(currentUserId));
+        boolean isWorkspaceMember = workspaceMemberRepository.findByWorkspaceIdAndUserId(workspace.getId(), currentUserId).isPresent();
 
         if (!isWorkspaceMember) {
             WorkspaceMemberEntity workspaceMember = WorkspaceMemberEntity.builder()
                     .workspace(workspace)
                     .user(currentUser)
-                    .role(WorkspaceRole.MEMBER)
+                    .role(WorkspaceRole.GUEST)
                     .build();
             workspaceMemberRepository.save(workspaceMember);
         }
