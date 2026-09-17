@@ -8,7 +8,7 @@ build/
 *.ear
 *.nar
 out/
-
+!gradle/wrapper/gradle-wrapper.jar
 # ── Logs & Temporary Files ──
 *.log
 logs/
