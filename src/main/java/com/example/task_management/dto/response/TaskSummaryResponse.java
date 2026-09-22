@@ -13,6 +13,7 @@ import java.time.LocalDate;
 public class TaskSummaryResponse {
     private Long id;
     private String title;
+    private Long projectId;
 
     private TaskPriority priority;
     private LocalDate startDate;

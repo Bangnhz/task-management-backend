@@ -62,6 +62,7 @@ public class TaskServiceImpl implements TaskService {
                 .map(task -> TaskSummaryResponse.builder()
                         .id(task.getId())
                         .title(task.getTitle())
+                        .projectId(task.getTaskList() != null && task.getTaskList().getProject() != null ? task.getTaskList().getProject().getId() : null)
                         .priority(task.getPriority())
                         .startDate(task.getStartDate())
                         .dueDate(task.getDueDate())
