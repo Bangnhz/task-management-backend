@@ -81,6 +81,17 @@ class TaskControllerTest {
     }
 
     @Test
+    void testGetTasksByUserId_MyPath_Success() throws Exception {
+        TaskSummaryResponse summary = TaskSummaryResponse.builder().id(10L).title("My Task").build();
+        when(taskService.getTaskByUser(1L)).thenReturn(List.of(summary));
+
+        mockMvc.perform(get("/api/tasks/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(10))
+                .andExpect(jsonPath("$[0].title").value("My Task"));
+    }
+
+    @Test
     void testGetTaskById_Success() throws Exception {
         TaskCardResponse card = TaskCardResponse.builder().id(10L).title("Task Detail").build();
         when(taskService.getTaskById(10L)).thenReturn(card);

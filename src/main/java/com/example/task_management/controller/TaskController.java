@@ -25,7 +25,7 @@ public class TaskController {
     @Autowired
     private CommentService commentService;
 
-    @GetMapping
+    @GetMapping({"", "/my"})
     public ResponseEntity<List<TaskSummaryResponse>> getTasksByUserId() {
         Long userId = SecurityUtils.getCurrentUserId();
         List<TaskSummaryResponse> tasks = taskService.getTaskByUser(userId);
