@@ -3,11 +3,11 @@ package com.example.task_management.config;
 import com.example.task_management.security.JwtAuthenticationEntryPoint;
 import com.example.task_management.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,6 +22,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +33,12 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationEntryPoint unauthorizedHandler;
+
+    @Value("${app.frontend-url:}")
+    private String frontendUrl;
+
+    @Value("${app.cors.allowed-origins:}")
+    private String additionalAllowedOrigins;
 
     @Bean
     public JwtAuthenticationFilter authenticationJwtTokenFilter() {
@@ -51,7 +58,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -70,15 +77,41 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Cho phép frontend React từ localhost:3000, 5173...
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://localhost:*"));
+        
+        List<String> allowedPatterns = new ArrayList<>(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "https://task-management-frontend-lime-rho.vercel.app",
+            "https://*.vercel.app"
+        ));
+
+        addOriginsFromConfig(allowedPatterns, frontendUrl);
+        addOriginsFromConfig(allowedPatterns, additionalAllowedOrigins);
+
+        configuration.setAllowedOriginPatterns(allowedPatterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private void addOriginsFromConfig(List<String> targetList, String originsConfig) {
+        if (originsConfig != null && !originsConfig.trim().isEmpty()) {
+            for (String origin : originsConfig.split(",")) {
+                String trimmed = origin.trim();
+                if (!trimmed.isEmpty() && !targetList.contains(trimmed)) {
+                    targetList.add(trimmed);
+                }
+            }
+        }
     }
 }
