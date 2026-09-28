@@ -23,16 +23,21 @@ public class TaskConverter {
     private UserConverter userConverter;
 
     public TaskSummaryResponse toTaskSummaryResponse(TaskEntity task) {
-        if (task == null) return null;
+        if (task == null)
+            return null;
         return TaskSummaryResponse.builder()
                 .id(task.getId())
                 .title(task.getTitle())
-                .projectId(task.getTaskList() != null && task.getTaskList().getProject() != null ? task.getTaskList().getProject().getId() : null)
+                .projectId(task.getTaskList() != null && task.getTaskList().getProject() != null
+                        ? task.getTaskList().getProject().getId()
+                        : null)
                 .priority(task.getPriority())
                 .startDate(task.getStartDate())
                 .dueDate(task.getDueDate())
                 .listTitle(task.getTaskList() != null ? task.getTaskList().getTitle() : null)
-                .projectTitle(task.getTaskList() != null && task.getTaskList().getProject() != null ? task.getTaskList().getProject().getTitle() : null)
+                .projectTitle(task.getTaskList() != null && task.getTaskList().getProject() != null
+                        ? task.getTaskList().getProject().getTitle()
+                        : null)
                 .build();
     }
 
@@ -45,7 +50,8 @@ public class TaskConverter {
         return TaskCardResponse.builder()
                 .id(task.getId())
                 .title(task.getTitle())
-                .projectId(task.getTaskList() != null && task.getTaskList().getProject() != null ? task.getTaskList().getProject().getId() : null)
+                // .projectId(task.getTaskList() != null && task.getTaskList().getProject() !=
+                // null ? task.getTaskList().getProject().getId() : null)
                 .priority(task.getPriority() != null ? task.getPriority().name() : null)
                 .status(task.getTaskList() != null ? task.getTaskList().getTitle() : null)
                 .startDate(task.getStartDate())
@@ -59,4 +65,3 @@ public class TaskConverter {
                 .build();
     }
 }
-

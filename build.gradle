@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.4' // Đưa về bản Spring Boot 3.3.x ổn định
+    id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
 }
 
@@ -10,7 +10,7 @@ description = 'task_management'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23) // Khuyên dùng Java 21 (LTS mới nhất tương thích 100% với Spring Boot 3)
+        languageVersion = JavaLanguageVersion.of(23)
     }
 }
 
@@ -22,6 +22,13 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:1.0.0-M1"
+    }
 }
 
 dependencies {
@@ -31,6 +38,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'com.cloudinary:cloudinary-http44:1.38.0'
+
+    // Spring AI OpenAI Starter (quản lý version qua BOM - dùng kết nối cả OpenAI và Gemini)
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+
     // JWT (JSON Web Token)
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
