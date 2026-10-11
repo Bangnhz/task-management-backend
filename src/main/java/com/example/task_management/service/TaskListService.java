@@ -5,6 +5,7 @@ import com.example.task_management.dto.request.TaskListUpdateRequest;
 import com.example.task_management.dto.response.TaskListResponse;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskListService {
     List<TaskListResponse> getTaskListsByProjectId(Long projectId);
@@ -12,6 +13,8 @@ public interface TaskListService {
     TaskListResponse createTaskList(Long projectId, TaskListCreateRequest request);
 
     TaskListResponse updateTaskList(Long id, TaskListUpdateRequest request);
+
+    Optional<TaskListResponse> findByProjectIdAndTitle(Long projectId, String title);
 }
 
 

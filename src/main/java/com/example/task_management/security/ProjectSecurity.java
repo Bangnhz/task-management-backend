@@ -37,8 +37,10 @@ public class ProjectSecurity {
             return false;
         }
 
-        // 1. Thành viên trực tiếp trong ProjectMember (bao gồm Owner) có status == ACTIVE
-        Optional<ProjectMemberEntity> projectMember = projectMemberRepository.findByProjectIdAndUserId(projectId, currentUserId);
+        // 1. Thành viên trực tiếp trong ProjectMember (bao gồm Owner) có status ==
+        // ACTIVE
+        Optional<ProjectMemberEntity> projectMember = projectMemberRepository.findByProjectIdAndUserId(projectId,
+                currentUserId);
         if (projectMember.isPresent() && projectMember.get().getStatus() == MemberStatus.ACTIVE) {
             return true;
         }
@@ -48,10 +50,11 @@ public class ProjectSecurity {
             return true;
         }
 
-        // 3. Dự án có visibility == WORKSPACE VÀ User là thành viên thuộc Workspace đó với status == ACTIVE và role != GUEST
+        // 3. Dự án có visibility == WORKSPACE VÀ User là thành viên thuộc Workspace đó
+        // với status == ACTIVE và role != GUEST
         if (ProjectVisibility.WORKSPACE.equals(project.getVisibility()) && project.getWorkspace() != null) {
-            Optional<WorkspaceMemberEntity> workspaceMember =
-                    workspaceMemberRepository.findByWorkspaceIdAndUserId(project.getWorkspace().getId(), currentUserId);
+            Optional<WorkspaceMemberEntity> workspaceMember = workspaceMemberRepository
+                    .findByWorkspaceIdAndUserId(project.getWorkspace().getId(), currentUserId);
 
             if (workspaceMember.isPresent()
                     && workspaceMember.get().getStatus() == MemberStatus.ACTIVE

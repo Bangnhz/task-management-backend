@@ -44,321 +44,428 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TaskServiceImplTest {
 
-    @Mock
-    private TaskRepository taskRepository;
+        @Mock
+        private TaskRepository taskRepository;
 
-    @Mock
-    private TaskListRepository taskListRepository;
+        @Mock
+        private TaskListRepository taskListRepository;
 
-    @Mock
-    private UserRepository userRepository;
+        @Mock
+        private UserRepository userRepository;
 
-    @Mock
-    private TaskConverter taskConverter;
+        @Mock
+        private TaskConverter taskConverter;
 
-    @Mock
-    private ActivityLogConverter activityLogConverter;
+        @Mock
+        private ActivityLogConverter activityLogConverter;
 
-    @Mock
-    private ActivityLogService activityLogService;
+        @Mock
+        private ActivityLogService activityLogService;
 
-    @Mock
-    private NotificationService notificationService;
+        @Mock
+        private NotificationService notificationService;
 
-    @InjectMocks
-    private TaskServiceImpl taskService;
+        @InjectMocks
+        private TaskServiceImpl taskService;
 
-    private final Long userId = 1L;
-    private final Long taskId = 100L;
-    private final Long listId = 10L;
-    private UserEntity user;
-    private CustomUserDetails userDetails;
+        private final Long userId = 1L;
+        private final Long taskId = 100L;
+        private final Long listId = 10L;
+        private UserEntity user;
+        private CustomUserDetails userDetails;
 
-    @BeforeEach
-    void setUp() {
-        user = UserEntity.builder().id(userId).fullName("Test User").email("test@example.com").build();
-        userDetails = new CustomUserDetails(userId, "test@example.com", "pass", "Test User", null, Collections.emptyList());
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
+        @BeforeEach
+        void setUp() {
+                user = UserEntity.builder().id(userId).fullName("Test User").email("test@example.com").build();
+                userDetails = new CustomUserDetails(userId, "test@example.com", "pass", "Test User", null,
+                                Collections.emptyList());
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,
+                                userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(auth);
+        }
 
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
-    }
+        @AfterEach
+        void tearDown() {
+                SecurityContextHolder.clearContext();
+        }
 
-    @Test
-    void testGetTaskByUser_Success() {
-        ProjectEntity project = ProjectEntity.builder().id(50L).title("Sample Project").build();
-        TaskListEntity taskList = TaskListEntity.builder().id(listId).title("To Do").project(project).build();
-        TaskEntity task = TaskEntity.builder()
-                .id(taskId)
-                .title("Sample Task")
-                .priority(TaskPriority.HIGH)
-                .startDate(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(3))
-                .taskList(taskList)
-                .build();
+        @Test
+        void testGetTaskByUser_Success() {
+                ProjectEntity project = ProjectEntity.builder().id(50L).title("Sample Project").build();
+                TaskListEntity taskList = TaskListEntity.builder().id(listId).title("To Do").project(project).build();
+                TaskEntity task = TaskEntity.builder()
+                                .id(taskId)
+                                .title("Sample Task")
+                                .priority(TaskPriority.HIGH)
+                                .startDate(LocalDate.now())
+                                .dueDate(LocalDate.now().plusDays(3))
+                                .taskList(taskList)
+                                .build();
 
-        when(taskRepository.findByAssigneeId(userId)).thenReturn(List.of(task));
+                when(taskRepository.findByAssigneeId(userId)).thenReturn(List.of(task));
 
-        List<TaskSummaryResponse> results = taskService.getTaskByUser(userId);
+                List<TaskSummaryResponse> results = taskService.getTaskByUser(userId);
 
-        assertNotNull(results);
-        assertEquals(1, results.size());
-        assertEquals("Sample Task", results.get(0).getTitle());
-        assertEquals("To Do", results.get(0).getListTitle());
-        assertEquals("Sample Project", results.get(0).getProjectTitle());
-    }
+                assertNotNull(results);
+                assertEquals(1, results.size());
+                assertEquals("Sample Task", results.get(0).getTitle());
+                assertEquals("To Do", results.get(0).getListTitle());
+                assertEquals("Sample Project", results.get(0).getProjectTitle());
+        }
 
-    @Test
-    void testMoveTask_ToDifferentList_SendsNotificationAndLog() {
-        TaskListEntity oldList = TaskListEntity.builder().id(10L).title("To Do").build();
-        TaskListEntity targetList = TaskListEntity.builder().id(20L).title("In Progress").build();
-        UserEntity assignee = UserEntity.builder().id(2L).fullName("Assignee").build();
+        @Test
+        void testMoveTask_ToDifferentList_SendsNotificationAndLog() {
+                TaskListEntity oldList = TaskListEntity.builder().id(10L).title("To Do").build();
+                TaskListEntity targetList = TaskListEntity.builder().id(20L).title("In Progress").build();
+                UserEntity assignee = UserEntity.builder().id(2L).fullName("Assignee").build();
 
-        TaskEntity task = TaskEntity.builder()
-                .id(taskId)
-                .title("Task Move")
-                .position(1000.0)
-                .taskList(oldList)
-                .assignee(assignee)
-                .build();
+                TaskEntity task = TaskEntity.builder()
+                                .id(taskId)
+                                .title("Task Move")
+                                .position(1000.0)
+                                .taskList(oldList)
+                                .assignee(assignee)
+                                .build();
 
-        TaskMoveRequest request = TaskMoveRequest.builder()
-                .targetListId(20L)
-                .position(2500L)
-                .build();
+                TaskMoveRequest request = TaskMoveRequest.builder()
+                                .targetListId(20L)
+                                .position(2500L)
+                                .build();
 
-        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
-        when(taskListRepository.findById(20L)).thenReturn(Optional.of(targetList));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(activityLogConverter.toTaskLogRequest(eq(task), eq(ActivityAction.MOVED), eq(userId), any()))
-                .thenReturn(ActivityLogCreateRequest.builder().build());
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(taskListRepository.findById(20L)).thenReturn(Optional.of(targetList));
+                when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+                when(activityLogConverter.toTaskLogRequest(eq(task), eq(ActivityAction.MOVED), eq(userId), any()))
+                                .thenReturn(ActivityLogCreateRequest.builder().build());
 
-        taskService.moveTask(taskId, request);
+                taskService.moveTask(taskId, request);
 
-        assertEquals(2500.0, task.getPosition());
-        assertEquals(targetList, task.getTaskList());
-        verify(taskRepository, times(1)).save(task);
-        verify(activityLogService, times(1)).log(any());
-        verify(notificationService, times(1)).sendNotification(
-                eq(assignee),
-                eq(user),
-                anyString(),
-                anyString(),
-                eq(NotificationType.STATUS_CHANGED),
-                eq(taskId)
-        );
-    }
+                assertEquals(2500.0, task.getPosition());
+                assertEquals(targetList, task.getTaskList());
+                verify(taskRepository, times(1)).save(task);
+                verify(activityLogService, times(1)).log(any());
+                verify(notificationService, times(1)).sendNotification(
+                                eq(assignee),
+                                eq(user),
+                                anyString(),
+                                anyString(),
+                                eq(NotificationType.STATUS_CHANGED),
+                                eq(taskId));
+        }
 
-    @Test
-    void testMoveTask_WithinSameList_NoNotification() {
-        TaskListEntity list = TaskListEntity.builder().id(10L).title("To Do").build();
-        UserEntity assignee = UserEntity.builder().id(2L).fullName("Assignee").build();
+        @Test
+        void testMoveTask_WithinSameList_NoNotification() {
+                TaskListEntity list = TaskListEntity.builder().id(10L).title("To Do").build();
+                UserEntity assignee = UserEntity.builder().id(2L).fullName("Assignee").build();
 
-        TaskEntity task = TaskEntity.builder()
-                .id(taskId)
-                .title("Task Reorder")
-                .position(1000.0)
-                .taskList(list)
-                .assignee(assignee)
-                .build();
+                TaskEntity task = TaskEntity.builder()
+                                .id(taskId)
+                                .title("Task Reorder")
+                                .position(1000.0)
+                                .taskList(list)
+                                .assignee(assignee)
+                                .build();
 
-        TaskMoveRequest request = TaskMoveRequest.builder()
-                .targetListId(10L)
-                .position(500L)
-                .build();
+                TaskMoveRequest request = TaskMoveRequest.builder()
+                                .targetListId(10L)
+                                .position(500L)
+                                .build();
 
-        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
-        when(taskListRepository.findById(10L)).thenReturn(Optional.of(list));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(taskListRepository.findById(10L)).thenReturn(Optional.of(list));
+                when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        taskService.moveTask(taskId, request);
+                taskService.moveTask(taskId, request);
 
-        assertEquals(500.0, task.getPosition());
-        verify(taskRepository, times(1)).save(task);
-        verify(notificationService, never()).sendNotification(any(), any(), any(), any(), any(), any());
-        verify(activityLogService, never()).log(any());
-    }
+                assertEquals(500.0, task.getPosition());
+                verify(taskRepository, times(1)).save(task);
+                verify(notificationService, never()).sendNotification(any(), any(), any(), any(), any(), any());
+                verify(activityLogService, never()).log(any());
+        }
 
-    @Test
-    void testMoveTask_TaskNotFound_ThrowsException() {
-        TaskMoveRequest request = TaskMoveRequest.builder().targetListId(20L).build();
-        when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
+        @Test
+        void testMoveTask_TaskNotFound_ThrowsException() {
+                TaskMoveRequest request = TaskMoveRequest.builder().targetListId(20L).build();
+                when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> taskService.moveTask(taskId, request));
-    }
+                assertThrows(RuntimeException.class, () -> taskService.moveTask(taskId, request));
+        }
 
-    @Test
-    void testMoveTask_TargetListNotFound_ThrowsException() {
-        TaskEntity task = TaskEntity.builder().id(taskId).build();
-        TaskMoveRequest request = TaskMoveRequest.builder().targetListId(20L).build();
+        @Test
+        void testMoveTask_TargetListNotFound_ThrowsException() {
+                TaskEntity task = TaskEntity.builder().id(taskId).build();
+                TaskMoveRequest request = TaskMoveRequest.builder().targetListId(20L).build();
 
-        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
-        when(taskListRepository.findById(20L)).thenReturn(Optional.empty());
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(taskListRepository.findById(20L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> taskService.moveTask(taskId, request));
-    }
+                assertThrows(RuntimeException.class, () -> taskService.moveTask(taskId, request));
+        }
 
-    @Test
-    void testCreateTask_Success_WithDefaultPositionAndPriority() {
-        TaskListEntity list = TaskListEntity.builder().id(listId).title("To Do").build();
-        TaskCreateRequest request = TaskCreateRequest.builder()
-                .title("New Task")
-                .description("Description")
-                .assigneeId(2L)
-                .priority("URGENT")
-                .build();
+        @Test
+        void testCreateTask_Success_WithDefaultPositionAndPriority() {
+                TaskListEntity list = TaskListEntity.builder().id(listId).title("To Do").build();
+                TaskCreateRequest request = TaskCreateRequest.builder()
+                                .title("New Task")
+                                .description("Description")
+                                .assigneeId(2L)
+                                .priority("URGENT")
+                                .build();
 
-        UserEntity assignee = UserEntity.builder().id(2L).fullName("Assignee").build();
+                UserEntity assignee = UserEntity.builder().id(2L).fullName("Assignee").build();
 
-        when(taskListRepository.findById(listId)).thenReturn(Optional.of(list));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(assignee));
-        when(taskRepository.findMaxPositionByTaskListId(listId)).thenReturn(null); // list is empty
+                when(taskListRepository.findById(listId)).thenReturn(Optional.of(list));
+                when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+                when(userRepository.findById(2L)).thenReturn(Optional.of(assignee));
+                when(taskRepository.findMaxPositionByTaskListId(listId)).thenReturn(null); // list is empty
 
-        TaskEntity savedTask = TaskEntity.builder().id(taskId).title("New Task").build();
-        when(taskRepository.save(any(TaskEntity.class))).thenReturn(savedTask);
-        when(taskConverter.toTaskCardResponse(savedTask)).thenReturn(TaskCardResponse.builder().id(taskId).build());
+                TaskEntity savedTask = TaskEntity.builder().id(taskId).title("New Task").build();
+                when(taskRepository.save(any(TaskEntity.class))).thenReturn(savedTask);
+                when(taskConverter.toTaskCardResponse(savedTask))
+                                .thenReturn(TaskCardResponse.builder().id(taskId).build());
 
-        TaskCardResponse result = taskService.createTask(listId, request);
+                TaskCardResponse result = taskService.createTask(listId, request);
 
-        assertNotNull(result);
-        assertEquals(taskId, result.getId());
+                assertNotNull(result);
+                assertEquals(taskId, result.getId());
 
-        ArgumentCaptor<TaskEntity> captor = ArgumentCaptor.forClass(TaskEntity.class);
-        verify(taskRepository, times(1)).save(captor.capture());
-        TaskEntity captured = captor.getValue();
-        assertEquals(1000.0, captured.getPosition()); // Initial position
-        assertEquals(TaskPriority.URGENT, captured.getPriority());
-        assertEquals("New Task", captured.getTitle());
-        assertEquals(assignee, captured.getAssignee());
-        assertEquals(user, captured.getCreatedBy());
-        verify(activityLogService, times(1)).log(any());
-    }
+                ArgumentCaptor<TaskEntity> captor = ArgumentCaptor.forClass(TaskEntity.class);
+                verify(taskRepository, times(1)).save(captor.capture());
+                TaskEntity captured = captor.getValue();
+                assertEquals(1000.0, captured.getPosition()); // Initial position
+                assertEquals(TaskPriority.URGENT, captured.getPriority());
+                assertEquals("New Task", captured.getTitle());
+                assertEquals(assignee, captured.getAssignee());
+                assertEquals(user, captured.getCreatedBy());
+                verify(activityLogService, times(1)).log(any());
+        }
 
-    @Test
-    void testCreateTask_WithExistingMaxPosition_DefaultMediumPriority() {
-        TaskListEntity list = TaskListEntity.builder().id(listId).title("To Do").build();
-        TaskCreateRequest request = TaskCreateRequest.builder()
-                .title("Second Task")
-                .priority(null)
-                .build();
+        @Test
+        void testCreateTask_WithExistingMaxPosition_DefaultMediumPriority() {
+                TaskListEntity list = TaskListEntity.builder().id(listId).title("To Do").build();
+                TaskCreateRequest request = TaskCreateRequest.builder()
+                                .title("Second Task")
+                                .priority(null)
+                                .build();
 
-        when(taskListRepository.findById(listId)).thenReturn(Optional.of(list));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(taskRepository.findMaxPositionByTaskListId(listId)).thenReturn(2000.0);
+                when(taskListRepository.findById(listId)).thenReturn(Optional.of(list));
+                when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+                when(taskRepository.findMaxPositionByTaskListId(listId)).thenReturn(2000.0);
 
-        TaskEntity savedTask = TaskEntity.builder().id(taskId).build();
-        when(taskRepository.save(any(TaskEntity.class))).thenReturn(savedTask);
-        when(taskConverter.toTaskCardResponse(savedTask)).thenReturn(TaskCardResponse.builder().id(taskId).build());
+                TaskEntity savedTask = TaskEntity.builder().id(taskId).build();
+                when(taskRepository.save(any(TaskEntity.class))).thenReturn(savedTask);
+                when(taskConverter.toTaskCardResponse(savedTask))
+                                .thenReturn(TaskCardResponse.builder().id(taskId).build());
 
-        taskService.createTask(listId, request);
+                taskService.createTask(listId, request);
 
-        ArgumentCaptor<TaskEntity> captor = ArgumentCaptor.forClass(TaskEntity.class);
-        verify(taskRepository, times(1)).save(captor.capture());
-        TaskEntity captured = captor.getValue();
-        assertEquals(3000.0, captured.getPosition()); // 2000 + 1000
-        assertEquals(TaskPriority.MEDIUM, captured.getPriority());
-    }
+                ArgumentCaptor<TaskEntity> captor = ArgumentCaptor.forClass(TaskEntity.class);
+                verify(taskRepository, times(1)).save(captor.capture());
+                TaskEntity captured = captor.getValue();
+                assertEquals(3000.0, captured.getPosition()); // 2000 + 1000
+                assertEquals(TaskPriority.MEDIUM, captured.getPriority());
+        }
 
-    @Test
-    void testUpdateTask_PartialUpdatesAndAssigneeNotification() {
-        UserEntity oldAssignee = UserEntity.builder().id(2L).fullName("Old Assignee").build();
-        UserEntity newAssignee = UserEntity.builder().id(3L).fullName("New Assignee").build();
-        TaskListEntity oldList = TaskListEntity.builder().id(10L).title("Old List").build();
-        TaskListEntity newList = TaskListEntity.builder().id(20L).title("New List").build();
+        @Test
+        void testUpdateTask_PartialUpdatesAndAssigneeNotification() {
+                UserEntity oldAssignee = UserEntity.builder().id(2L).fullName("Old Assignee").build();
+                UserEntity newAssignee = UserEntity.builder().id(3L).fullName("New Assignee").build();
+                TaskListEntity oldList = TaskListEntity.builder().id(10L).title("Old List").build();
+                TaskListEntity newList = TaskListEntity.builder().id(20L).title("New List").build();
 
-        TaskEntity task = TaskEntity.builder()
-                .id(taskId)
-                .title("Old Title")
-                .description("Old Desc")
-                .priority(TaskPriority.LOW)
-                .assignee(oldAssignee)
-                .taskList(oldList)
-                .build();
+                TaskEntity task = TaskEntity.builder()
+                                .id(taskId)
+                                .title("Old Title")
+                                .description("Old Desc")
+                                .priority(TaskPriority.LOW)
+                                .assignee(oldAssignee)
+                                .taskList(oldList)
+                                .build();
 
-        TaskUpdateRequest request = TaskUpdateRequest.builder()
-                .title("New Title")
-                .description("New Desc")
-                .priority("HIGH")
-                .assigneeId(3L)
-                .listId(20L)
-                .startDate(LocalDate.of(2026, 9, 1))
-                .dueDate(LocalDate.of(2026, 9, 15))
-                .build();
+                TaskUpdateRequest request = TaskUpdateRequest.builder()
+                                .title("New Title")
+                                .description("New Desc")
+                                .priority("HIGH")
+                                .assigneeId(3L)
+                                .listId(20L)
+                                .startDate(LocalDate.of(2026, 9, 1))
+                                .dueDate(LocalDate.of(2026, 9, 15))
+                                .build();
 
-        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userRepository.findById(3L)).thenReturn(Optional.of(newAssignee));
-        when(taskListRepository.findById(20L)).thenReturn(Optional.of(newList));
-        when(taskRepository.save(any(TaskEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(taskConverter.toTaskCardResponse(any(TaskEntity.class)))
-                .thenReturn(TaskCardResponse.builder().id(taskId).title("New Title").build());
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+                when(userRepository.findById(3L)).thenReturn(Optional.of(newAssignee));
+                when(taskListRepository.findById(20L)).thenReturn(Optional.of(newList));
+                when(taskRepository.save(any(TaskEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(taskConverter.toTaskCardResponse(any(TaskEntity.class)))
+                                .thenReturn(TaskCardResponse.builder().id(taskId).title("New Title").build());
 
-        TaskCardResponse result = taskService.updateTask(taskId, request);
+                TaskCardResponse result = taskService.updateTask(taskId, request);
 
-        assertNotNull(result);
-        assertEquals("New Title", task.getTitle());
-        assertEquals("New Desc", task.getDescription());
-        assertEquals(TaskPriority.HIGH, task.getPriority());
-        assertEquals(newAssignee, task.getAssignee());
-        assertEquals(newList, task.getTaskList());
-        assertEquals(LocalDate.of(2026, 9, 1), task.getStartDate());
-        assertEquals(LocalDate.of(2026, 9, 15), task.getDueDate());
+                assertNotNull(result);
+                assertEquals("New Title", task.getTitle());
+                assertEquals("New Desc", task.getDescription());
+                assertEquals(TaskPriority.HIGH, task.getPriority());
+                assertEquals(newAssignee, task.getAssignee());
+                assertEquals(newList, task.getTaskList());
+                assertEquals(LocalDate.of(2026, 9, 1), task.getStartDate());
+                assertEquals(LocalDate.of(2026, 9, 15), task.getDueDate());
 
-        // Verify notification sent to new assignee
-        verify(notificationService, times(1)).sendNotification(
-                eq(newAssignee),
-                eq(user),
-                anyString(),
-                contains("New Title"),
-                eq(NotificationType.ASSIGNED),
-                eq(taskId)
-        );
+                // Verify notification sent to new assignee
+                verify(notificationService, times(1)).sendNotification(
+                                eq(newAssignee),
+                                eq(user),
+                                anyString(),
+                                contains("New Title"),
+                                eq(NotificationType.ASSIGNED),
+                                eq(taskId));
 
-        // Verify activity log call
-        verify(activityLogService, times(1)).log(any());
-    }
+                // Verify activity log call
+                verify(activityLogService, times(1)).log(any());
+        }
 
-    @Test
-    void testGetTaskById_Success() {
-        TaskEntity task = TaskEntity.builder().id(taskId).title("Test").build();
-        TaskCardResponse response = TaskCardResponse.builder().id(taskId).title("Test").build();
+        @Test
+        void testGetTaskById_Success() {
+                TaskEntity task = TaskEntity.builder().id(taskId).title("Test").build();
+                TaskCardResponse response = TaskCardResponse.builder().id(taskId).title("Test").build();
 
-        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
-        when(taskConverter.toTaskCardResponse(task)).thenReturn(response);
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(taskConverter.toTaskCardResponse(task)).thenReturn(response);
 
-        TaskCardResponse result = taskService.getTaskById(taskId);
-        assertNotNull(result);
-        assertEquals(taskId, result.getId());
-    }
+                TaskCardResponse result = taskService.getTaskById(taskId);
+                assertNotNull(result);
+                assertEquals(taskId, result.getId());
+        }
 
-    @Test
-    void testGetTaskById_NotFound_ThrowsException() {
-        when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> taskService.getTaskById(taskId));
-    }
+        @Test
+        void testGetTaskById_NotFound_ThrowsException() {
+                when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
+                assertThrows(RuntimeException.class, () -> taskService.getTaskById(taskId));
+        }
 
-    @Test
-    void testDeleteTask_Success_WithActivityLog() {
-        TaskEntity task = TaskEntity.builder().id(taskId).title("To Delete").build();
-        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
-        when(activityLogConverter.toTaskLogRequest(eq(task), eq(ActivityAction.DELETED), eq(userId), isNull()))
-                .thenReturn(ActivityLogCreateRequest.builder().build());
+        @Test
+        void testDeleteTask_Success_WithActivityLog() {
+                TaskEntity task = TaskEntity.builder().id(taskId).title("To Delete").build();
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(activityLogConverter.toTaskLogRequest(eq(task), eq(ActivityAction.DELETED), eq(userId), isNull()))
+                                .thenReturn(ActivityLogCreateRequest.builder().build());
 
-        taskService.deleteTask(taskId);
+                taskService.deleteTask(taskId);
 
-        verify(activityLogService, times(1)).log(any());
-        verify(taskRepository, times(1)).delete(task);
-    }
+                verify(activityLogService, times(1)).log(any());
+                verify(taskRepository, times(1)).delete(task);
+        }
 
-    @Test
-    void testDeleteTask_NotFound_ThrowsException() {
-        when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> taskService.deleteTask(taskId));
-        verify(taskRepository, never()).delete(any());
-    }
+        @Test
+        void testDeleteTask_NotFound_ThrowsException() {
+                when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
+                assertThrows(RuntimeException.class, () -> taskService.deleteTask(taskId));
+                verify(taskRepository, never()).delete(any());
+        }
+
+        @Test
+        void testFindTasksByName_Success() {
+                TaskEntity task = TaskEntity.builder().id(1L).title("Test Task").build();
+                TaskCardResponse card = TaskCardResponse.builder().id(1L).title("Test Task").build();
+
+                when(taskRepository.findByTitleContainingIgnoreCase("test")).thenReturn(List.of(task));
+                when(taskConverter.toTaskCardResponse(task)).thenReturn(card);
+
+                List<TaskCardResponse> results = taskService.findTasksByName(" test ");
+
+                assertEquals(1, results.size());
+                assertEquals("Test Task", results.get(0).getTitle());
+                verify(taskRepository, times(1)).findByTitleContainingIgnoreCase("test");
+        }
+
+        @Test
+        void testFindTasksByName_BlankOrNull_ReturnsEmptyList() {
+                assertTrue(taskService.findTasksByName(null).isEmpty());
+                assertTrue(taskService.findTasksByName("   ").isEmpty());
+                verify(taskRepository, never()).findByTitleContainingIgnoreCase(any());
+        }
+
+        @Test
+        void testFindTasksByName_WithProjectId_Success() {
+                Long projectId = 10L;
+                TaskEntity task = TaskEntity.builder().id(1L).title("Project Task").build();
+                TaskCardResponse card = TaskCardResponse.builder().id(1L).title("Project Task").build();
+
+                when(taskRepository.findByTaskListProjectIdAndTitleContainingIgnoreCase(projectId, "task"))
+                                .thenReturn(List.of(task));
+                when(taskConverter.toTaskCardResponse(task)).thenReturn(card);
+
+                List<TaskCardResponse> results = taskService.findTasksByName(projectId, "task");
+
+                assertEquals(1, results.size());
+                assertEquals("Project Task", results.get(0).getTitle());
+                verify(taskRepository, times(1)).findByTaskListProjectIdAndTitleContainingIgnoreCase(projectId, "task");
+        }
+
+        @Test
+        void testFindTasksByName_WithNullProjectId_CallsRepositoryByTitleOnly() {
+                TaskEntity task = TaskEntity.builder().id(1L).title("Task").build();
+                TaskCardResponse card = TaskCardResponse.builder().id(1L).title("Task").build();
+
+                when(taskRepository.findByTitleContainingIgnoreCase("task")).thenReturn(List.of(task));
+                when(taskConverter.toTaskCardResponse(task)).thenReturn(card);
+
+                List<TaskCardResponse> results = taskService.findTasksByName(null, "task");
+
+                assertEquals(1, results.size());
+                verify(taskRepository, times(1)).findByTitleContainingIgnoreCase("task");
+        }
+
+        @Test
+        void testDeleteTaskByTitleAndProject_Success() {
+                Long projectId = 10L;
+                TaskEntity task = TaskEntity.builder().id(taskId).title("Task To Delete").build();
+                when(taskRepository.findByTaskListProjectIdAndTitleContainingIgnoreCase(projectId, "Task To Delete"))
+                                .thenReturn(List.of(task));
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(activityLogConverter.toTaskLogRequest(eq(task), eq(ActivityAction.DELETED), eq(userId), isNull()))
+                                .thenReturn(ActivityLogCreateRequest.builder().build());
+
+                taskService.deleteTaskByTitleAndProject("Task To Delete", projectId);
+
+                verify(taskRepository, times(1)).delete(task);
+                verify(activityLogService, times(1)).log(any());
+        }
+
+        @Test
+        void testDeleteTaskByTitleAndProject_NotFound_ThrowsException() {
+                Long projectId = 10L;
+                when(taskRepository.findByTaskListProjectIdAndTitleContainingIgnoreCase(projectId, "Nonexistent"))
+                                .thenReturn(Collections.emptyList());
+
+                assertThrows(RuntimeException.class,
+                                () -> taskService.deleteTaskByTitleAndProject("Nonexistent", projectId));
+                verify(taskRepository, never()).delete(any());
+        }
+
+        @Test
+        void testDeleteTaskByTitleAndTaskList_Success() {
+                TaskEntity task = TaskEntity.builder().id(taskId).title("Task In List").build();
+
+                when(taskRepository.findByTaskListIdAndTitleContainingIgnoreCase(listId, "Task In List"))
+                                .thenReturn(List.of(task));
+                when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+                when(activityLogConverter.toTaskLogRequest(eq(task), eq(ActivityAction.DELETED), eq(userId), isNull()))
+                                .thenReturn(ActivityLogCreateRequest.builder().build());
+
+                taskService.deleteTaskByTitleAndTaskList("Task In List", listId);
+
+                verify(taskRepository, times(1)).delete(task);
+                verify(activityLogService, times(1)).log(any());
+        }
+
+        @Test
+        void testDeleteTaskByTitleAndTaskList_NotFound_ThrowsException() {
+                when(taskRepository.findByTaskListIdAndTitleContainingIgnoreCase(listId, "Nonexistent"))
+                                .thenReturn(Collections.emptyList());
+
+                assertThrows(RuntimeException.class,
+                                () -> taskService.deleteTaskByTitleAndTaskList("Nonexistent", listId));
+                verify(taskRepository, never()).delete(any());
+        }
 }

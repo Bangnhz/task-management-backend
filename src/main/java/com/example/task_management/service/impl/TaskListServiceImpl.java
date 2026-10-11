@@ -50,9 +50,10 @@ public class TaskListServiceImpl implements TaskListService {
         ProjectEntity projectEntity = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
-        // 2. Kiểm tra thành viên trực tiếp trong ProjectMember (bao gồm Owner) có status == ACTIVE
-        Optional<ProjectMemberEntity> projectMember =
-                projectMemberRepository.findByProjectIdAndUserId(projectId, userId);
+        // 2. Kiểm tra thành viên trực tiếp trong ProjectMember (bao gồm Owner) có
+        // status == ACTIVE
+        Optional<ProjectMemberEntity> projectMember = projectMemberRepository.findByProjectIdAndUserId(projectId,
+                userId);
 
         if (projectMember.isPresent() && projectMember.get().getStatus() == MemberStatus.ACTIVE) {
             return fetchAndConvertTaskLists(projectId);
@@ -63,10 +64,11 @@ public class TaskListServiceImpl implements TaskListService {
             return fetchAndConvertTaskLists(projectId);
         }
 
-        // 4. Kiểm tra nếu là Workspace Visibility VÀ User là thành viên thuộc Workspace đó với status == ACTIVE và role != GUEST
+        // 4. Kiểm tra nếu là Workspace Visibility VÀ User là thành viên thuộc Workspace
+        // đó với status == ACTIVE và role != GUEST
         if (ProjectVisibility.WORKSPACE.equals(projectEntity.getVisibility()) && projectEntity.getWorkspace() != null) {
-            Optional<WorkspaceMemberEntity> workspaceMember =
-                    workspaceMemberRepository.findByWorkspaceIdAndUserId(projectEntity.getWorkspace().getId(), userId);
+            Optional<WorkspaceMemberEntity> workspaceMember = workspaceMemberRepository
+                    .findByWorkspaceIdAndUserId(projectEntity.getWorkspace().getId(), userId);
 
             if (workspaceMember.isPresent()
                     && workspaceMember.get().getStatus() == MemberStatus.ACTIVE
@@ -139,5 +141,32 @@ public class TaskListServiceImpl implements TaskListService {
         TaskListEntity updatedTaskList = taskListRepository.save(taskListEntity);
         return taskListConverter.toTaskListResponse(updatedTaskList);
     }
-}
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<TaskListResponse> findByProjectIdAndTitle(Long projectId, String title) {
+        if (projectId == null || title == null || title.isBlank()) {
+            return Optional.empty();
+        }
+
+        String searchTitle = title.trim().toLowerCase();
+        List<TaskListEntity> taskLists = taskListRepository.findByProjectIdOrderByPositionAsc(projectId);
+
+        Optional<TaskListEntity> exactMatch = taskLists.stream()
+                .filter(tl -> tl.getTitle().equalsIgnoreCase(searchTitle))
+                .findFirst();
+
+        if (exactMatch.isPresent()) {
+            return exactMatch.map(taskListConverter::toTaskListResponse);
+        }
+
+        return taskLists.stream()
+                .filter(tl -> {
+                    String listTitle = tl.getTitle().toLowerCase();
+                    return listTitle.contains(searchTitle) || searchTitle.contains(listTitle);
+                })
+                .findFirst()
+                .map(taskListConverter::toTaskListResponse);
+    }
+
+}

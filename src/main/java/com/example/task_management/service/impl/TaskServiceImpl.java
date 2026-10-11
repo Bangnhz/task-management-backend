@@ -62,7 +62,9 @@ public class TaskServiceImpl implements TaskService {
                 .map(task -> TaskSummaryResponse.builder()
                         .id(task.getId())
                         .title(task.getTitle())
-                        .projectId(task.getTaskList() != null && task.getTaskList().getProject() != null ? task.getTaskList().getProject().getId() : null)
+                        .projectId(task.getTaskList() != null && task.getTaskList().getProject() != null
+                                ? task.getTaskList().getProject().getId()
+                                : null)
                         .priority(task.getPriority())
                         .startDate(task.getStartDate())
                         .dueDate(task.getDueDate())
@@ -90,7 +92,7 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.save(task);
 
         if (task.getAssignee() != null && (oldList == null || !oldList.getId().equals(targetList.getId()))) {
-            //log
+            // log
             Map<String, Object> moveDetails = new HashMap<>();
             moveDetails.put("fromListTitle", oldList != null ? oldList.getTitle() : null);
             moveDetails.put("toListTitle", targetList.getTitle());
@@ -99,18 +101,16 @@ public class TaskServiceImpl implements TaskService {
                     task,
                     ActivityAction.MOVED,
                     actorId,
-                    moveDetails
-            );
+                    moveDetails);
             activityLogService.log(logRequest);
-            //notification
+            // notification
             notificationService.sendNotification(
                     task.getAssignee(),
                     actor,
                     "Trạng thái task đã thay đổi",
                     "Task \"" + task.getTitle() + "\" đã được chuyển sang danh sách \"" + targetList.getTitle() + "\"",
                     NotificationType.STATUS_CHANGED,
-                    task.getId()
-            );
+                    task.getId());
         }
     }
 
@@ -176,8 +176,7 @@ public class TaskServiceImpl implements TaskService {
                 savedTask,
                 ActivityAction.CREATED,
                 actorId,
-                null
-        );
+                null);
         activityLogService.log(logRequest);
 
         return taskConverter.toTaskCardResponse(savedTask);
@@ -193,7 +192,8 @@ public class TaskServiceImpl implements TaskService {
         UserEntity actor = userRepository.findById(actorId).orElseThrow(() -> new RuntimeException("User not found"));
         Map<String, Object> changeDetails = new HashMap<>();
 
-        if (request.getTitle() != null && !request.getTitle().isBlank() && !request.getTitle().equals(task.getTitle())) {
+        if (request.getTitle() != null && !request.getTitle().isBlank()
+                && !request.getTitle().equals(task.getTitle())) {
             changeDetails.put("oldTitle", task.getTitle());
             changeDetails.put("newTitle", request.getTitle());
             task.setTitle(request.getTitle());
@@ -233,8 +233,7 @@ public class TaskServiceImpl implements TaskService {
                         "Bạn được giao một task mới",
                         "Bạn đã được chỉ định vào task: " + task.getTitle(),
                         NotificationType.ASSIGNED,
-                        task.getId()
-                );
+                        task.getId());
             }
         }
         if (request.getListId() != null) {
@@ -253,8 +252,7 @@ public class TaskServiceImpl implements TaskService {
                 updatedTask,
                 ActivityAction.UPDATED,
                 actorId,
-                changeDetails
-        );
+                changeDetails);
         activityLogService.log(logRequest);
 
         return taskConverter.toTaskCardResponse(updatedTask);
@@ -280,10 +278,92 @@ public class TaskServiceImpl implements TaskService {
                 task,
                 ActivityAction.DELETED,
                 actorId,
-                null
-        );
+                null);
         activityLogService.log(logRequest);
 
         taskRepository.delete(task);
     }
+
+    @Override
+    public List<TaskCardResponse> findTasksByName(String name) {
+        if (name == null || name.isBlank()) {
+            return List.of();
+        }
+        List<TaskEntity> tasks = taskRepository.findByTitleContainingIgnoreCase(name.trim());
+        return tasks.stream()
+                .map(taskConverter::toTaskCardResponse)
+                .toList();
+    }
+
+    @Override
+    public List<TaskCardResponse> findTasksByName(Long projectId, String name) {
+        if (name == null || name.isBlank()) {
+            return List.of();
+        }
+        if (projectId == null) {
+            return findTasksByName(name);
+        }
+        List<TaskEntity> tasks = taskRepository.findByTaskListProjectIdAndTitleContainingIgnoreCase(projectId,
+                name.trim());
+        return tasks.stream()
+                .map(taskConverter::toTaskCardResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteTaskByTitleAndProject(String title, Long projectId) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Tiêu đề task không được để trống");
+        }
+
+        String trimmedTitle = title.trim();
+        List<TaskEntity> tasks = List.of();
+
+        if (projectId != null) {
+            tasks = taskRepository.findByTaskListProjectIdAndTitleContainingIgnoreCase(projectId, trimmedTitle);
+        }
+        if (tasks.isEmpty()) {
+            tasks = taskRepository.findByTitleContainingIgnoreCase(trimmedTitle);
+        }
+
+        if (tasks.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy task nào có tên '" + title + "'"
+                    + (projectId != null ? " trong project " + projectId : ""));
+        }
+
+        for (TaskEntity task : tasks) {
+            deleteTask(task.getId());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteTaskByTitleAndTaskList(String title, Long taskListId) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Tiêu đề task không được để trống");
+        }
+
+        String trimmedTitle = title.trim();
+        List<TaskEntity> tasks = List.of();
+
+        if (taskListId != null) {
+            tasks = taskRepository.findByTaskListIdAndTitleContainingIgnoreCase(taskListId, trimmedTitle);
+        }
+
+        // Fallback: Nếu không tìm thấy trong taskList, tìm theo tên trên toàn hệ thống
+        if (tasks.isEmpty()) {
+            tasks = taskRepository.findByTitleContainingIgnoreCase(trimmedTitle);
+        }
+
+        if (tasks.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy task nào có tên '" + title + "'"
+                    + (taskListId != null ? " trong task list " + taskListId : ""));
+        }
+
+        for (TaskEntity task : tasks) {
+            deleteTask(task.getId());
+        }
+    }
+
 }

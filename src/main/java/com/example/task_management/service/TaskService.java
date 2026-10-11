@@ -22,5 +22,13 @@ public interface TaskService {
     public TaskCardResponse getTaskById(Long taskId);
 
     public void deleteTask(Long taskId);
-}
 
+    public List<TaskCardResponse> findTasksByName(String name);
+
+    public List<TaskCardResponse> findTasksByName(Long projectId, String name);
+
+    public void deleteTaskByTitleAndProject(String title, Long projectId);
+
+    public void deleteTaskByTitleAndTaskList(String title, Long taskListId);
+
+}

@@ -12,9 +12,17 @@ import java.util.List;
 @Repository
 public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
     List<TaskEntity> findByAssigneeId(Long userId);
+
     List<TaskEntity> findByTaskListProjectId(Long projectId);
+
     List<TaskEntity> findByDueDateAndTaskListIsDoneFalse(LocalDate dueDate);
+
+    List<TaskEntity> findByTitleContainingIgnoreCase(String title);
+
+    List<TaskEntity> findByTaskListProjectIdAndTitleContainingIgnoreCase(Long projectId, String title);
+
+    List<TaskEntity> findByTaskListIdAndTitleContainingIgnoreCase(Long taskListId, String title);
+
     @Query("SELECT MAX(t.position) FROM TaskEntity t WHERE t.taskList.id = :taskListId")
     Double findMaxPositionByTaskListId(@Param("taskListId") Long taskListId);
 }
-

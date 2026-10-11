@@ -61,14 +61,14 @@ public class ProjectController {
 //    }
 
     @GetMapping("/{projectId}")
-    @PreAuthorize("@projectSecurity.canAccessProject(#projectId)")
+    @PreAuthorize("@projectSecurity.canAccessProject(#p0)")
     public ResponseEntity<ProjectResponse> getProjectById(@PathVariable("projectId") Long projectId) {
         ProjectResponse project = projectService.getProjectById(projectId);
         return ResponseEntity.ok(project);
     }
 
     @GetMapping("/{projectId}/tasks")
-    @PreAuthorize("@projectSecurity.canAccessProject(#projectId)")
+    @PreAuthorize("@projectSecurity.canAccessProject(#p0)")
     public ResponseEntity<List<TaskCardResponse>> getTasksByProjectId(@PathVariable("projectId") Long projectId) {
         List<TaskCardResponse> tasks = taskService.getTasksByProjectId(projectId);
         return ResponseEntity.ok(tasks);
@@ -76,7 +76,7 @@ public class ProjectController {
 
     // Project detail
     @GetMapping("/{projectId}/task-lists")
-    @PreAuthorize("@projectSecurity.canAccessProject(#projectId)")
+    @PreAuthorize("@projectSecurity.canAccessProject(#p0)")
     public ResponseEntity<List<TaskListResponse>> getTaskListsByProjectId(@PathVariable("projectId") Long projectId) {
         System.out.println("ProjectId create" + projectId);
         List<TaskListResponse> taskLists = taskListService.getTaskListsByProjectId(projectId);

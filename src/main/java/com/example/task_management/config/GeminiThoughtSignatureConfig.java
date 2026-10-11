@@ -28,7 +28,7 @@ public class GeminiThoughtSignatureConfig {
     private final Map<String, String> signatureCache = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Bean
+    @Bean("geminiThoughtSignatureRestClientCustomizer")
     public RestClientCustomizer geminiThoughtSignatureRestClientCustomizer() {
         return restClientBuilder -> restClientBuilder.requestInterceptor(new GeminiThoughtSignatureInterceptor());
     }
