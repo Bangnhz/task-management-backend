@@ -23,7 +23,8 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
             p.title,
             COUNT(t.id),
             p.visibility,
-            p.updatedAt
+            p.updatedAt,
+            COUNT(CASE WHEN tl.isDone = true THEN t.id END)
         )
         FROM ProjectEntity p
         LEFT JOIN p.taskLists tl
@@ -64,7 +65,8 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
         p.title,
         COUNT(t.id),
         p.visibility,
-        p.updatedAt
+        p.updatedAt,
+        COUNT(CASE WHEN tl.isDone = true THEN t.id END)
     )
     FROM ProjectEntity p
     LEFT JOIN p.taskLists tl

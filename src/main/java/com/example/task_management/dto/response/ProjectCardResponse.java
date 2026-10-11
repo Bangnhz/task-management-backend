@@ -16,4 +16,5 @@ public class ProjectCardResponse {
     private Long totalTasks;
     private ProjectVisibility visibility;
     private LocalDateTime updatedAt;
+    private Long completedTasks;
 }
